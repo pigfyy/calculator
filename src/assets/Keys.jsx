@@ -3,7 +3,7 @@ export default function (props) {
     <div
       className="keys"
       onClick={(e) => {
-        props.keyPressed(e.target.innerText);
+        props.keyPressed(e.target.innerText, e.target.className);
       }}
     >
       <button className="key top-row">C</button>
