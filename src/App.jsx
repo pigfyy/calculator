@@ -39,74 +39,75 @@ export default function () {
 
   // for calculator app
 
-  const [display, setDisplay] = useState("");
+  const [display, setDisplay] = useState({ show: "", isRes: false });
   const [equation, setEquation] = useState([]);
+  const dis = display.show;
 
   function keyPressed(keyValue, keyClass) {
+    // check if key is a number
     if (keyValue.length > 10) return;
+
+    if (keyValue === "C") {
+      setDisplay({ show: "", isRes: false });
+      setEquation([]);
+      return;
+    }
+    // check if key is an operator
     if (keyClass.includes("operator")) {
+      const prevDisplay = removeCommas(dis);
       if (equation[0] === "Error") return;
       setEquation((equation) => {
         let s;
-        if (display === "") {
+        // check if last key was an operator
+        if (dis === "") {
           if (equation.length === 0) return equation;
           s = [...equation.slice(0, -1)];
         } else {
-          s = [...equation, removeCommas(display)];
+          s = [...equation, prevDisplay];
         }
+        // display answer
+        const res = eval(s.join(""));
         if (keyValue === "=") {
-          const res = eval(s.join(""));
-          const roundedRes = Math.round(res * 1000000000) / 1000000000;
-          if (roundedRes.toString().length > 9) {
-            const t = roundedRes.toExponential(3);
-            setDisplay(t);
-            return [t];
-          }
-          setDisplay(addCommas(roundedRes));
-          return [roundedRes];
+          // find answer
+          // use exponential notation if answer is too big
+          setDisplay({ show: res, isRes: true });
+          return [];
         }
-        setDisplay("");
+        setDisplay((prev) => ({ ...prev, isRes: true }));
         if (keyValue === "x") {
           return [...s, "*"];
         }
         if (keyValue === "÷") {
           return [...s, "/"];
         }
-        return [...s, keyValue];
+        setDisplay({ show: res, isRes: true });
+        return [res, keyValue];
       });
     } else {
       setDisplay((prev) => {
-        if (prev === "Error") {
-          setEquation([]);
-          return keyValue;
-        }
-        let ret = removeCommas(prev + keyValue);
-        if (onlyNumbers(ret).length > 9) {
-          setEquation(["Error"]);
-          return "Error";
-        }
-        return addCommas(ret);
+        if (prev.isRes) return { show: keyValue, isRes: false };
+        return { show: prev.show + keyValue, isRes: false };
       });
-    }
-
-    function addCommas(x) {
-      return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
 
     function removeCommas(x) {
       return x.toString().replace(/,/g, "");
     }
-
-    function onlyNumbers(string) {
-      return string.replace(/[^0-9]/g, "");
-    }
   }
+
+  console.log(`equation: ${equation.join("")} || display: ${dis}`);
 
   // adjust font size
 
   const fontSize = {
-    fontSize: display.length < 8 ? "5.5rem" : `${5.5 - display.length / 7}rem`,
+    fontSize: dis.length < 8 ? "5.5rem" : `${5.5 - dis.length / 7}rem`,
   };
+
+  // add commas to numbers
+
+  function addCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
 
   return (
     <section
@@ -116,7 +117,9 @@ export default function () {
       }
     >
       <h1 className="display" style={fontSize}>
-        {display}
+        {dis.toString().length > 9
+          ? parseFloat(dis).toExponential(4)
+          : addCommas(dis)}
       </h1>
       <Keys
         keyPressed={(keyValue, keyClass) => keyPressed(keyValue, keyClass)}
