@@ -1,3 +1,5 @@
+// TODO: fix in the case of infinity
+
 import Keys from "./assets/Keys";
 import { useState, useEffect } from "react";
 
@@ -39,68 +41,133 @@ export default function () {
 
   // for calculator app
 
-  const [display, setDisplay] = useState({ show: "", isRes: false });
-  const [equation, setEquation] = useState([]);
-  const dis = display.show;
+  const [equation, setEquation] = useState({
+    equation: [],
+    curIndex: 0,
+    display: "0",
+    result: undefined,
+  });
 
   function keyPressed(keyValue, keyClass) {
-    // check if key is a number
-    if (keyValue.length > 10) return;
+    // functions: -------------------------------------------------
 
-    if (keyValue === "C") {
-      setDisplay({ show: "", isRes: false });
-      setEquation([]);
-      return;
+    // check if string is an operator
+    function isOperator(str) {
+      return str === "+" || str === "-" || str === "*" || str === "/";
     }
-    // check if key is an operator
-    if (keyClass.includes("operator")) {
-      const prevDisplay = removeCommas(dis);
-      if (equation[0] === "Error") return;
-      setEquation((equation) => {
-        let s;
-        // check if last key was an operator
-        if (dis === "") {
-          if (equation.length === 0) return equation;
-          s = [...equation.slice(0, -1)];
+
+    // convert keyValue to an operator if it is one using a switch statement
+    function convertToOperator(str) {
+      switch (str) {
+        case "x":
+          return "*";
+        case "÷":
+          return "/";
+        default:
+          return str;
+      }
+    }
+
+    // ------------------------------------------------------------
+
+    keyValue = convertToOperator(keyValue);
+
+    setEquation((prevEquation) => {
+      // separate equation into array to access each element
+      let [equation, curIndex, display, result] = [
+        prevEquation.equation,
+        prevEquation.curIndex,
+        prevEquation.display,
+        prevEquation.result,
+      ];
+
+      // if result is defined, set result to undefined
+      if (result !== undefined) {
+        result = undefined;
+      }
+
+      // if key is a number
+      if (keyClass.includes("num")) {
+        // if equation is currently empty or current index of equation is simply 0, replace 0 with the key pressed
+        if (
+          (keyValue !== "." && equation[curIndex] === "0") ||
+          equation.length === 0
+        ) {
+          equation[curIndex] = keyValue;
+
+          // increment curIndex if the last index of equation is an operator
+        } else if (isOperator(equation[curIndex])) {
+          curIndex++;
+          equation[curIndex] = keyValue;
+
+          // if the last index of equation is a number, add the key pressed to the end of the number
         } else {
-          s = [...equation, prevDisplay];
+          equation[curIndex] += keyValue;
         }
-        // display answer
-        const res = eval(s.join(""));
-        if (keyValue === "=") {
-          // find answer
-          // use exponential notation if answer is too big
-          setDisplay({ show: res, isRes: true });
-          return [];
-        }
-        setDisplay((prev) => ({ ...prev, isRes: true }));
-        if (keyValue === "x") {
-          return [...s, "*"];
-        }
-        if (keyValue === "÷") {
-          return [...s, "/"];
-        }
-        setDisplay({ show: res, isRes: true });
-        return [res, keyValue];
-      });
-    } else {
-      setDisplay((prev) => {
-        if (prev.isRes) return { show: keyValue, isRes: false };
-        return { show: prev.show + keyValue, isRes: false };
-      });
-    }
 
-    function removeCommas(x) {
-      return x.toString().replace(/,/g, "");
-    }
+        // if key is an operator
+      } else if (isOperator(keyValue)) {
+        // if equation is currently empty, add 0 to the equation
+        if (equation.length === 0) {
+          equation[curIndex] = "0";
+          curIndex++;
+
+          // if the last index of equation is an operator, replace it with the key pressed
+        } else if (isOperator(equation[curIndex])) {
+          equation[curIndex] = keyValue;
+
+          // if equation is not empty, add the key pressed to the end of the equation
+        } else {
+          curIndex++;
+          equation[curIndex] = keyValue;
+        }
+
+        // if key is =
+      } else if (keyValue === "=") {
+        // if equation isn't empty, evaluate the equation
+        if (equation.length !== 0) {
+          // if the last index of equation is an operator, remove it
+          if (isOperator(equation[curIndex])) {
+            equation.pop();
+          }
+
+          // evaluate the equation
+          result = eval(equation.join(""));
+          result == "Infinity"
+            ? (equation = [])
+            : (equation = [result.toString()]);
+          curIndex = 0;
+        }
+      }
+
+      // determine display - display previous value if last index is an operator
+
+      if (result || result === 0) {
+        display = result;
+      } else if (!isOperator(equation[curIndex])) {
+        display = equation[curIndex];
+      } else {
+        display = equation[curIndex - 1];
+      }
+
+      return { equation, curIndex, display, result };
+    });
   }
 
-  console.log(`equation: ${equation.join("")} || display: ${dis}`);
+  // values
+  console.log(
+    `~~~\ncurIndex: ${equation.curIndex}, display: ${equation.display}, result: ${equation.result}`
+  );
+  console.log("equation:");
+  console.log(equation.equation);
 
   // adjust font size
 
   const fontSize = {
-    fontSize: dis.length < 8 ? "5.5rem" : `${5.5 - dis.length / 7}rem`,
+    fontSize:
+      equation.display.length < 8
+        ? "5.5rem"
+        : `${5.5 - equation.display.length / 7}rem`,
   };
 
   // add commas to numbers
@@ -117,9 +184,9 @@ export default function () {
       }
     >
       <h1 className="display" style={fontSize}>
-        {dis.toString().length > 9
-          ? parseFloat(dis).toExponential(4)
-          : addCommas(dis)}
+        {equation.display.toString().length > 9
+          ? parseFloat(equation.display).toExponential(4)
+          : addCommas(equation.display)}
       </h1>
       <Keys
         keyPressed={(keyValue, keyClass) => keyPressed(keyValue, keyClass)}
