@@ -64,6 +64,11 @@
   background-color: hsl(36, 95%, 49%);
 }
 
+[data-is-current = "t"] {
+  background-color: white;
+  color: hsl(36, 95%, 49%);
+}
+
 .stretch-two {
   grid-column: span 2;
   border-radius: 100px;
