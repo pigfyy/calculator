@@ -162,7 +162,6 @@ export default function () {
         (equation[curIndex] === "+" || equation[curIndex] === "-")
       ) {
         display = eval(equation.slice(0, curIndex).join(""));
-        console.log(equation.slice(0, curIndex).join(""));
         // if last index of equation isn't an operator, display last index of equation
       } else if (!isOperator(equation[curIndex])) {
         display = equation[curIndex];
