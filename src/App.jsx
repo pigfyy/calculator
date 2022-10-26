@@ -138,14 +138,35 @@ export default function () {
             : (equation = [result.toString()]);
           curIndex = 0;
         }
+
+        // if key is C
+      } else if (keyValue === "C") {
+        // clear the equation
+        equation = [];
+        curIndex = 0;
       }
 
-      // determine display - display previous value if last index is an operator
-
+      // determine display
+      // if result is defined, display result
       if (result || result === 0) {
         display = result;
+        // if equation is empty, display 0
+      } else if (equation.length === 0) {
+        display = "0";
+        // if equation length is one, display the first index of equation
+      } else if (equation.length === 1) {
+        display = equation[0];
+        // if last index of equation is + or -, display current result
+      } else if (
+        equation.length > 3 &&
+        (equation[curIndex] === "+" || equation[curIndex] === "-")
+      ) {
+        display = eval(equation.slice(0, curIndex).join(""));
+        console.log(equation.slice(0, curIndex).join(""));
+        // if last index of equation isn't an operator, display last index of equation
       } else if (!isOperator(equation[curIndex])) {
         display = equation[curIndex];
+        // if last index of equation is an operator, display the second to last index of equation
       } else {
         display = equation[curIndex - 1];
       }
@@ -156,7 +177,7 @@ export default function () {
 
   // values
   console.log(
-    `~~~\ncurIndex: ${equation.curIndex}, display: ${equation.display}, result: ${equation.result}`
+    `~~~\n\n\ncurIndex: ${equation.curIndex}, display: ${equation.display}, result: ${equation.result}`
   );
   console.log("equation:");
   console.log(equation.equation);
@@ -185,7 +206,7 @@ export default function () {
     >
       <h1 className="display" style={fontSize}>
         {equation.display.toString().length > 9
-          ? parseFloat(equation.display).toExponential(4)
+          ? parseFloat(equation.display).toExponential(2)
           : addCommas(equation.display)}
       </h1>
       <Keys
