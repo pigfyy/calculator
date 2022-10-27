@@ -68,6 +68,17 @@ export default function () {
       }
     }
 
+    // add commas to numbers
+
+    function addCommas(x) {
+      // seperate x after decimal point
+      let [whole, decimal] = x.toString().split(".");
+      // add commas to whole number
+      whole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      // return whole number and decimal
+      return x.toString().includes(".") ? whole + "." + decimal : whole;
+    }
+
     // ------------------------------------------------------------
 
     keyValue = convertToOperator(keyValue);
@@ -93,8 +104,14 @@ export default function () {
 
       // if key is a number
       if (keyClass.includes("num")) {
-        // if equation is currently empty or current index of equation is simply 0, replace 0 with the key pressed
-        if (equation[curIndex] === "0" || equation.length === 0) {
+        // if result is undefined, empty equation and set first element to keyValue
+        if (curIndex === 0 && equation.length > 1) {
+          equation = [];
+          equation[0] = keyValue;
+          curIndex = 0;
+
+          // if equation is currently empty or current index of equation is simply 0, replace 0 with the key pressed
+        } else if (equation[curIndex] === "0" || equation.length === 0) {
           equation[curIndex] = keyValue;
 
           // if current index of equation is -00, replace -00 with -(key pressed)
@@ -113,16 +130,22 @@ export default function () {
 
         // if key is an operator
       } else if (isOperator(keyValue)) {
-        // if equation is currently empty, add 0 to the equation
-        if (equation.length === 0) {
-          // if the last index of equation is an operator, replace it with the key pressed
-        } else if (isOperator(equation[curIndex])) {
-          equation[curIndex] = keyValue;
+        // only add operator if equation is not empty
+        if (equation.length !== 0) {
+          // if curIndex is 0 and equation length is larger then 1, set equation to [equation[0], keyValue]
+          if (curIndex === 0 && equation.length > 1) {
+            equation = [equation[0], keyValue];
+            curIndex = 1;
 
-          // if equation is not empty, add the key pressed to the end of the equation
-        } else {
-          curIndex++;
-          equation[curIndex] = keyValue;
+            // if the last index of equation is an operator, replace it with the key pressed
+          } else if (isOperator(equation[curIndex])) {
+            equation[curIndex] = keyValue;
+
+            // if equation is not empty, add the key pressed to the end of the equation
+          } else {
+            curIndex++;
+            equation[curIndex] = keyValue;
+          }
         }
 
         // if key is =
@@ -138,7 +161,7 @@ export default function () {
           result = eval(equation.join("").replace(/-00/g, "-0"));
           result == "Infinity"
             ? (equation = [])
-            : (equation = [result.toString()]);
+            : (equation = [result.toString(), ...equation.slice(1)]);
           curIndex = 0;
         }
 
@@ -183,30 +206,54 @@ export default function () {
       // if result is defined, display result
       if (result || result === 0) {
         display = result;
+
         // if equation is empty, display 0
       } else if (equation.length === 0) {
         display = "0";
+
         // if last index of equation is "-00", display "-0"
       } else if (
         equation[curIndex] === "-00" ||
         equation[curIndex - 1] === "-00"
       ) {
         display = "-0";
+
         // if equation length is one, display the first index of equation
       } else if (equation.length === 1) {
         display = equation[0];
+
         // if last index of equation is + or -, display current result
       } else if (
         equation.length > 3 &&
         (equation[curIndex] === "+" || equation[curIndex] === "-")
       ) {
         display = eval(equation.slice(0, curIndex).join(""));
+
         // if last index of equation isn't an operator, display last index of equation
       } else if (!isOperator(equation[curIndex])) {
         display = equation[curIndex];
+
         // if last index of equation is an operator, display the second to last index of equation
       } else {
         display = equation[curIndex - 1];
+      }
+
+      // format display
+      // if display with only numbers is short enough, simply add commas
+      if (display.toString().replace(/[^0-9]/g, "").length < 10) {
+        display = addCommas(display);
+
+        // if displays value is larger then 999999999, change display to a float and use e notation
+      } else if (display > 999999999) {
+        display = parseFloat(display).toExponential(3);
+
+        // if display value is smaller than 0.000000001, use e notation
+      } else if (display < 0.000000001) {
+        display = parseFloat(display).toExponential(3);
+
+        // if display value is between 0.000000001 and 999999999, round number to 9 digits and add commas
+      } else {
+        display = addCommas(parseFloat(display).toFixed(9));
       }
 
       return { equation, curIndex, display, result };
@@ -229,17 +276,6 @@ export default function () {
         : `${5.5 - equation.display.length / 7}rem`,
   };
 
-  // add commas to numbers
-
-  function addCommas(x) {
-    // seperate x after decimal point
-    let [whole, decimal] = x.toString().split(".");
-    // add commas to whole number
-    whole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    // return whole number and decimal
-    return x.toString().includes(".") ? whole + "." + decimal : whole;
-  }
-
   return (
     <section
       className="calculator"
@@ -248,9 +284,7 @@ export default function () {
       }
     >
       <h1 className="display" style={fontSize}>
-        {equation.display.toString().length > 9
-          ? parseFloat(equation.display).toExponential(2)
-          : addCommas(equation.display)}
+        {equation.display}
       </h1>
       <Keys
         keyPressed={(keyValue, keyClass) => keyPressed(keyValue, keyClass)}
