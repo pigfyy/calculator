@@ -6,7 +6,7 @@ export default function (props) {
         props.keyPressed(e.target.innerText, e.target.className);
       }}
     >
-      <button className="key top-row">C</button>
+      <button className="key top-row">{props.whichClear}</button>
       <button className="key top-row">+/-</button>
       <button className="key top-row">%</button>
       <button

@@ -51,11 +51,6 @@ export default function () {
   function keyPressed(keyValue, keyClass) {
     // functions: -------------------------------------------------
 
-    // check if string is an operator
-    function isOperator(str) {
-      return str === "+" || str === "-" || str === "*" || str === "/";
-    }
-
     // convert keyValue to an operator if it is one using a switch statement
     function convertToOperator(str) {
       switch (str) {
@@ -167,6 +162,16 @@ export default function () {
 
         // if key is C
       } else if (keyValue === "C") {
+        // if last index of equation is a number, delete the last index of equation
+        if (
+          equation[curIndex] !== undefined &&
+          !isOperator(equation[curIndex])
+        ) {
+          // remove last index of equation
+          equation.pop();
+          curIndex !== 0 && curIndex--;
+        }
+      } else if (keyValue === "AC") {
         // clear the equation
         equation = [];
         curIndex = 0;
@@ -289,7 +294,22 @@ export default function () {
       <Keys
         keyPressed={(keyValue, keyClass) => keyPressed(keyValue, keyClass)}
         lastIndexOfEquation={equation.equation[equation.equation.length - 1]}
+        whichClear={
+          // if equation is empty, or if last index of equation is an operator, or if last index of equation is "-00", or if last index of equation is "0", or if last index of equation is "0." display "AC", else display "C"
+          equation.equation.length === 0 || // if equation is empty
+          isOperator(equation.equation[equation.equation.length - 1]) || // if last index of equation is an operator
+          equation.equation[equation.equation.length - 1] === "-00" || // if last index of equation is "-00"
+          equation.equation[equation.equation.length - 1] === "0" || // if last index of equation is "0"
+          equation.equation[equation.equation.length - 1] === "0." // if last index of equation is "0."
+            ? "AC"
+            : "C"
+        }
       />
     </section>
   );
+
+  // check if string is an operator
+  function isOperator(str) {
+    return str === "+" || str === "-" || str === "*" || str === "/";
+  }
 }

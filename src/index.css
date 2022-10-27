@@ -12,6 +12,7 @@
   height: 100vh;
   display: grid;
   place-items: center;
+  background-color: black;
 }
 
 .calculator {
@@ -22,6 +23,8 @@
   align-items: center;
   justify-content: end;
   background-color: black;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 8px 32px 0 rgba(31, 38, 135, 0.37);
 }
 
 .display {
@@ -49,6 +52,12 @@
   font-size: 2.5rem;
   background-color: #333333;
   color: white;
+  transform: scale(1);
+  transition: transform 0.2s ease-in-out;
+}
+
+.key:active {
+  transform: scale(0.95);
 }
 
 .key:hover {
@@ -67,6 +76,8 @@
 [data-is-current = "t"] {
   background-color: white;
   color: hsl(36, 95%, 49%);
+  transition: color 0.1s ease-in-out;
+  transition: background-color 0.1s ease-in-out;
 }
 
 .stretch-two {
