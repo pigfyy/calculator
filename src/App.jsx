@@ -229,8 +229,11 @@ export default function () {
 
         // if last index of equation is + or -, display current result
       } else if (
-        equation.length > 3 &&
-        (equation[curIndex] === "+" || equation[curIndex] === "-")
+        (equation.length > 3 &&
+          (equation[curIndex] === "+" || equation[curIndex] === "-")) ||
+        ((equation[curIndex] === "*" || equation[curIndex] === "/") &&
+          equation[curIndex - 2] === "*") ||
+        equation[curIndex - 2] === "/"
       ) {
         display = eval(equation.slice(0, curIndex).join(""));
 
